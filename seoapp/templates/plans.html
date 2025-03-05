@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}Plans & Pricing{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Pricing Cards -->
+    <div class="row row-cols-1 row-cols-md-3 mb-5 text-center">
+        <!-- Free Plan -->
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header py-3 {% if user.plan == 'Free' %}bg-primary text-white{% endif %}">
+                    <h4 class="my-0">Free</h4>
+                </div>
+                <div class="card-body">
+                    <h1 class="card-title">
+                        $0<small class="text-muted fw-light">/mo</small>
+                    </h1>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li class="mb-2">10 users included</li>
+                        <li class="mb-2">2 GB of storage</li>
+                        <li class="mb-2">Email support</li>
+                        <li class="mb-2">Help center access</li>
+                    </ul>
+                    <form method="POST" action="{% url 'change_plan' 'Free' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="w-100 btn {% if user.plan == 'Free' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-lg">Sign up for free</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pro Plan -->
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header py-3 {% if user.plan == 'Pro' %}bg-primary text-white{% endif %}">
+                    <h4 class="my-0">Pro</h4>
+                </div>
+                <div class="card-body">
+                    <h1 class="card-title">
+                        $15<small class="text-muted fw-light">/mo</small>
+                    </h1>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li class="mb-2">20 users included</li>
+                        <li class="mb-2">10 GB of storage</li>
+                        <li class="mb-2">Priority email support</li>
+                        <li class="mb-2">Help center access</li>
+                    </ul>
+                    <form method="POST" action="{% url 'change_plan' 'Pro' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="w-100 btn {% if user.plan == 'Pro' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-lg">Get started</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header py-3 {% if user.plan == 'Enterprise' %}bg-primary text-white{% endif %}">
+                    <h4 class="my-0">Enterprise</h4>
+                </div>
+                <div class="card-body">
+                    <h1 class="card-title">
+                        $29<small class="text-muted fw-light">/mo</small>
+                    </h1>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li class="mb-2">30 users included</li>
+                        <li class="mb-2">15 GB of storage</li>
+                        <li class="mb-2">Phone and email support</li>
+                        <li class="mb-2">Help center access</li>
+                    </ul>
+                    <form method="POST" action="{% url 'change_plan' 'Enterprise' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="w-100 btn {% if user.plan == 'Enterprise' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-lg">Contact us</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compare Plans Table -->
+    <h2 class="text-center mb-4">Compare plans</h2>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th style="width: 34%;"></th>
+                    <th style="width: 22%;" class="text-center">Free</th>
+                    <th style="width: 22%;" class="text-center">Pro</th>
+                    <th style="width: 22%;" class="text-center">Enterprise</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row">Public</th>
+                    <td class="text-center"><i class="bi bi-check-lg text-success"></i></td>
+                    <td class="text-center"><i class="bi bi-check-lg text-success"></i></td>
+                    <td class="text-center"><i class="bi bi-check-lg text-success"></i></td>
+                </tr>
+                <tr>
+                    <th scope="row">Private</th>
+                    <td class="text-center"></td>
+                    <td class="text-center"></td>
+                    <td class="text-center"><i class="bi bi-check-lg text-success"></i></td>
+                </tr>
+                <tr>
+                    <th scope="row">Permissions</th>
+                    <td class="text-center"><i class="bi bi-check-lg text-success"></i></td>
+                    <td class="text-center"><i class="bi bi-check-lg text-success"></i></td>
+                    <td class="text-center"><i class="bi bi-check-lg text-success"></i></td>
+                </tr>
+                <tr>
+                    <th scope="row">Sharing</th>
+                    <td class="text-center"></td>
+                    <td class="text-center"><i class="bi bi-check-lg text-success"></i></td>
+                    <td class="text-center"><i class="bi bi-check-lg text-success"></i></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

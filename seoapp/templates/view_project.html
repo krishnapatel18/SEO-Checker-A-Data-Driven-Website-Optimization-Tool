@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Project Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">{{ project.title }}</h2>
+                    <p><strong>URL:</strong> {{ project.url }}</p>
+                    <p><strong>Last Scan:</strong> {{ project.crawled_at }}</p>
+                    <p><strong>Status:</strong> {{ project.status_code }}</p>
+                    <p><strong>Response Time:</strong> {{ project.response_time }} seconds</p>
+                    <p><strong>File Size:</strong> {{ project.file_size }} KB</p>
+                    <p><strong>Word Count:</strong> {{ project.word_count }}</p>
+                    <p><strong>Media Files:</strong> {{ project.media_files }}</p>
+                    <p><strong>Internal Links:</strong> {{ project.internal_links }}</p>
+                    <p><strong>External Links:</strong> {{ project.external_links }}</p>
+                    <p><strong>Backlinks:</strong> {{ project.backlinks }}</p>
+                    <p><strong>Page Speed Insights:</strong> {{ project.page_speed_insights }}</p>
+                    <p><strong>Suggested Keywords:</strong> {{ project.suggested_keywords }}</p>
+                    <h2>SEO Suggestions</h2>
+                    <ul>
+                        {% for suggestion in seo_suggestions_list %}
+                            <li>{{ suggestion }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
