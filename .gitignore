@@ -1,0 +1,22 @@
+# .gitignore
+# Python
+*.pyc
+__pycache__/
+
+# Environment variables
+.env
+
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+media
+
+# Vercel
+.vercel
+
+# Virtual environment
+myapp/

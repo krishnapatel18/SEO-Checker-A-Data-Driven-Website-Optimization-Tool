@@ -5,8 +5,10 @@ charset-normalizer==3.4.1
 Django==4.2.19
 gunicorn==23.0.0
 idna==3.10
+mysqlclient==2.2.7
 packaging==24.2
 PyMySQL==1.1.1
+python-dotenv==1.0.1
 requests==2.32.3
 soupsieve==2.6
 sqlparse==0.5.3
