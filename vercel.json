@@ -5,13 +5,6 @@
             "src": "seo_tool/wsgi.py",
             "use": "@vercel/python",
             "config": { "maxLambdaSize": "15mb", "runtime": "python3.9" }
-        },
-        {
-            "src": "build.sh",
-            "use": "@vercel/static-build",
-            "config": {
-                "distDir": "staticfiles"
-            }
         }
     ],
     "routes": [
@@ -28,5 +21,6 @@
         "PIP_NO_CACHE_DIR": "off",
         "PIP_DISABLE_PIP_VERSION_CHECK": "on",
         "PYTHONUNBUFFERED": "1"
-    }
+    },
+    "buildCommand": "pip install -r requirements.txt && python manage.py collectstatic --noinput"
 }
