@@ -26,6 +26,3 @@ urlpatterns = [
     path('', include('seoapp.urls')),
     path('webcrawler/', include('webcrawler.urls')),
 ]
-
-
-urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
