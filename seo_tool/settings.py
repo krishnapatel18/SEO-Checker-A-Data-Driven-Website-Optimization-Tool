@@ -23,11 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-=q-^2$fhwm3msb1xq=+v55h8f-ux7bn^uo6t577mf)ea(j&bmt'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-# DEBUG = False
+# DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
-# ALLOWED_HOSTS = ['.vercel.app', '127.0.0.1', '.now.sh']
+# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['.vercel.app', '127.0.0.1', '.now.sh']
 
 # Application definition
 
@@ -75,13 +75,24 @@ WSGI_APPLICATION = 'seo_tool.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'seotool_db',
+#         'USER': 'root',
+#         'PASSWORD': '',
+#         'HOST': 'localhost',
+#         'PORT': '3306',
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'seotool_db',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': 'localhost',
+        'NAME': 'if0_38464609_seo_tool_db',
+        'USER': 'if0_38464609',
+        'PASSWORD': 'K18P02M19S01',
+        'HOST': 'sql200.infinityfree.com',
         'PORT': '3306',
     }
 }
