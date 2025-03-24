@@ -1,0 +1,53 @@
+<hr class="my-4">
+<h1 class="mb-4">SEO Analysis Results for {{ url }}</h1>
+
+<div class="mb-4">
+    <h3 class="text-primary"><i class="bi bi-info-circle"></i> Meta Information</h3>
+    <p><strong>Title:</strong> {{ title }}</p>
+    <p><strong>Description:</strong> {{ description }}</p>
+    <p><strong>Keywords:</strong> {{ keywords }}</p>
+</div>
+
+<hr>
+
+<div class="mb-4">
+    <h3 class="text-success"><i class="bi bi-speedometer2"></i> Performance Metrics</h3>
+    <p><strong>Response Time:</strong> {{ response_time }} seconds</p>
+    <p><strong>File Size:</strong> {{ file_size }} KB</p>
+    <p><strong>Word Count:</strong> {{ word_count }}</p>
+    <p><strong>Media Files:</strong> {{ media_files }}</p>
+</div>
+
+<hr>
+
+<div class="mb-4">
+    <h3 class="text-info"><i class="bi bi-link-45deg"></i> Link Structure</h3>
+    <p><strong>Internal Links:</strong> {{ internal_links }}</p>
+    <p><strong>External Links:</strong> {{ external_links }}</p>
+    <p><strong>Backlinks:</strong> {{ backlinks }}</p>
+</div>
+
+<hr>
+
+<div class="mb-4">
+    <h3 class="text-warning"><i class="bi bi-lightning"></i> Page Speed Insights</h3>
+    <p>{{ page_speed_insights }}</p>
+</div>
+
+<hr>
+
+<div class="mb-4">
+    <h3 class="text-danger"><i class="bi bi-key"></i> Suggested Keywords</h3>
+    <p>{{ suggested_keywords }}</p>
+</div>
+
+<hr>
+
+<div class="mb-4">
+    <h3 class="text-secondary"><i class="bi bi-lightbulb"></i> SEO Suggestions</h3>
+    <ul>
+        {% for suggestion in seo_suggestions %}
+            <li>{{ suggestion }}</li>
+        {% endfor %}
+    </ul>
+</div>

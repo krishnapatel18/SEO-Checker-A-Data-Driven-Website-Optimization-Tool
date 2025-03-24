@@ -16,7 +16,7 @@
                         </div>
                     {% endif %}
                     <h2 class="mb-4">Enter Website URL:</h2>
-                    <form method="POST" action="{% url 'add_project' %}">
+                    <form id="seoForm" method="POST" action="{% url 'add_project' %}">
                         {% csrf_token %}
                         <div class="mb-4">
                             <input type="url" 
@@ -27,67 +27,126 @@
                                    required>
                         </div>
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">Analyze</button>
+                            <button type="submit" class="btn btn-primary btn-lg"  id="finalsubmitbutton">Analyze</button>
                         </div>
                     </form>
-                    {% if url %}
-                        <hr class="my-4">
-                        <h1 class="mb-4">SEO Analysis Results for {{ url }}</h1>
-                        
-                        <div class="mb-4">
-                            <h3 class="text-primary"><i class="bi bi-info-circle"></i> Meta Information</h3>
-                            <p><strong>Title:</strong> {{ title }}</p>
-                            <p><strong>Description:</strong> {{ description }}</p>
-                            <p><strong>Keywords:</strong> {{ keywords }}</p>
+
+                    <!-- Progress Bar -->
+                    <div class="progress mt-4" style="height: 20px; display: none;" id="progressContainer">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" id="progressBar">
+                            0%
                         </div>
-                        
-                        <hr>
-                        
-                        <div class="mb-4">
-                            <h3 class="text-success"><i class="bi bi-speedometer2"></i> Performance Metrics</h3>
-                            <p><strong>Response Time:</strong> {{ response_time }} seconds</p>
-                            <p><strong>File Size:</strong> {{ file_size }} KB</p>
-                            <p><strong>Word Count:</strong> {{ word_count }}</p>
-                            <p><strong>Media Files:</strong> {{ media_files }}</p>
-                        </div>
-                        
-                        <hr>
-                        
-                        <div class="mb-4">
-                            <h3 class="text-info"><i class="bi bi-link-45deg"></i> Link Structure</h3>
-                            <p><strong>Internal Links:</strong> {{ internal_links }}</p>
-                            <p><strong>External Links:</strong> {{ external_links }}</p>
-                            <p><strong>Backlinks:</strong> {{ backlinks }}</p>
-                        </div>
-                        
-                        <hr>
-                        
-                        <div class="mb-4">
-                            <h3 class="text-warning"><i class="bi bi-lightning"></i> Page Speed Insights</h3>
-                            <p>{{ page_speed_insights }}</p>
-                        </div>
-                        
-                        <hr>
-                        
-                        <div class="mb-4">
-                            <h3 class="text-danger"><i class="bi bi-key"></i> Suggested Keywords</h3>
-                            <p>{{ suggested_keywords }}</p>
-                        </div>
-                        
-                        <hr>
-                        
-                        <div class="mb-4">
-                            <h3 class="text-secondary"><i class="bi bi-lightbulb"></i> SEO Suggestions</h3>
-                            <ul>
-                                {% for suggestion in seo_suggestions %}
-                                    <li>{{ suggestion }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    {% endif %}
+                    </div>
+
+                    <!-- New Button to View Report -->
+                    <div class="d-grid mt-4" id="viewReportContainer">
+                        <button id="viewReportButton" class="btn btn-success btn-lg">View Report</button>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div id="results" class="mt-4" style="display: none;">
+                    </div>
+
+                    <!-- Error Message -->
+                    <div id="errorMessage" class="alert alert-danger mt-4" style="display: none;"></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('seoForm');
+    const progressBar = document.getElementById('progressBar');
+    const progressContainer = document.getElementById('progressContainer');
+    const viewReportContainer = document.getElementById('viewReportContainer');
+    const viewReportButton = document.getElementById('viewReportButton');
+    const results = document.getElementById('results');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    // Make sure the view report container is hidden initially
+    viewReportButton.style.display = 'none';
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault(); // Prevent default form submission
+
+        const formData = new FormData(form);
+        const url = form.action;
+
+        finalsubmitbutton.style.display = 'none'; // Hide the "Analyze" button
+        // Reset and show the progress bar
+        progressContainer.style.display = 'block';
+        progressBar.style.width = '0%';
+        progressBar.textContent = '0%';
+        
+        // Hide previous views and errors
+        errorMessage.style.display = 'none';
+        // viewReportContainer.style.display = 'none';
+        results.style.display = 'none';
+
+        // Start with initial progress
+        let progress = 0;
+        
+        // Use a faster interval for smoother animation (300ms)
+        const interval = setInterval(() => {
+            // Increment by smaller amounts for smoother animation
+            progress += 5;
+            
+            // Cap progress at 90% until we get actual completion
+            if (progress <= 90) {
+                progressBar.style.width = progress + '%';
+                progressBar.textContent = progress + '%';
+            }
+        }, 300);
+
+        // Send the AJAX request
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Ensure the progress bar reaches 100%
+                clearInterval(interval);
+                progressBar.style.width = '100%';
+                progressBar.textContent = '100%';
+
+                // Wait a moment to let the user see 100% complete
+                setTimeout(() => {
+                    // Hide the progress bar and show the "View Report" button
+                    progressContainer.style.display = 'none';
+                    // viewReportContainer.style.display = 'block';
+                    viewReportButton.style.display = 'block';
+                    
+                    // Store the results but don't show them yet
+                    results.innerHTML = data.results_html;
+                }, 500);
+            })
+            .catch(error => {
+                clearInterval(interval);
+                progressBar.style.width = '100%';
+                progressBar.textContent = 'Error';
+                progressContainer.style.display = 'none';
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = error.message || 'An unexpected error occurred.';
+                console.error('Error:', error);
+            });
+    });
+
+    // Handle "View Report" button click
+    viewReportButton.addEventListener('click', function () {
+        results.style.display = 'block'; // Show the results section
+        viewReportButton.style.display = 'none'; // Hide the "View Report" button 
+        finalsubmitbutton.style.display = 'block'; // Show the "Analyze" button
+    });
+});
+</script>
 {% endblock %}

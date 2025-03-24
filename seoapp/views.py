@@ -9,6 +9,9 @@ from bs4 import BeautifulSoup
 import time
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.db import OperationalError
 
 @require_http_methods(["GET", "POST"])
 def signin_view(request):
@@ -95,8 +98,9 @@ def update_settings(request):
         messages.success(request, 'Settings updated successfully!')
     return redirect('profile')
 
+@login_required
 def add_project(request):
-    if request.method == 'POST':
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         url = request.POST.get('url')
         try:
             start_time = time.time()
@@ -104,8 +108,7 @@ def add_project(request):
             response.raise_for_status()
             response_time = time.time() - start_time
         except requests.exceptions.RequestException as e:
-            messages.error(request, 'Website does not exist or could not be reached.')
-            return render(request, 'add_project.html')
+            return JsonResponse({'error': 'Website does not exist or could not be reached.'}, status=400)
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -151,55 +154,163 @@ def add_project(request):
             media_files = len(soup.find_all('img'))
             internal_links = len([link for link in soup.find_all('a') if link.get('href') and link.get('href').startswith('/')])
             external_links = len([link for link in soup.find_all('a') if link.get('href') and not link.get('href').startswith('/')])
-            file_size = len(response.content) / 1024  # in KB
+            file_size = len(response.content) / 1024
             
-            # Fetch backlinks using an SEO API (replace with actual API call and key)
             try:
-                backlinks_response = requests.get(f'https://api.example.com/backlinks?url={url}&apikey=YOUR_API_KEY')
+                openpagerank_api_key = 's8ogw4skc804w8w8s0o8ssgcc0gc0480g44c0ogc'
+                headers = {
+                    'API-OPR': openpagerank_api_key
+                }
+                backlinks_response = requests.get(f'https://openpagerank.com/api/v1.0/getPageRank?domains[]={url}', headers=headers)
                 backlinks_response.raise_for_status()
                 backlinks_data = backlinks_response.json()
-                backlinks = backlinks_data.get('backlinks', 'No backlinks found.')
+                backlinks = backlinks_data['response'][0].get('page_rank_integer', 'No backlinks found.')
             except requests.exceptions.RequestException as e:
                 backlinks = f'Error retrieving backlinks: {e}'
 
-            # Fetch Page Speed Insights using Google PageSpeed Insights API
             try:
-                psi_response = requests.get(f'https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={url}&key=YOUR_API_KEY')
+                psi_response = requests.get(f'https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={url}&key=AIzaSyBbAMUmZPMflaY12sdSUDdETlal7WcUTKo')
                 psi_response.raise_for_status()
                 psi_data = psi_response.json()
                 page_speed_insights = psi_data.get('lighthouseResult', {}).get('categories', {}).get('performance', {}).get('score', 'Error retrieving Page Speed Insights.')
             except requests.exceptions.RequestException as e:
-                page_speed_insights = f'Error retrieving Page Speed Insights: {e}'
+                page_speed_insights = f'Error retrieving Page Speed Insights: {e}' 
 
-            # Fetch suggested keywords using an SEO API (replace with actual API call and key)
+            # try:
+            #     # Using Datamuse API to get related words
+            #     datamuse_url = f'https://api.datamuse.com/words?rel_jjb={url.split("//")[1].split("/")[0].replace("www.", "")}&max=10'
+            #     keywords_response = requests.get(datamuse_url)
+            #     keywords_response.raise_for_status()
+            #     keywords_data = keywords_response.json()
+                
+            #     # Extract suggested keywords
+            #     suggested_keywords = [item.get('word') for item in keywords_data if 'word' in item]
+                
+            #     # If no keywords found, try another approach with 'means like'
+            #     if not suggested_keywords:
+            #         datamuse_url = f'https://api.datamuse.com/words?ml={url.split("//")[1].split("/")[0].replace("www.", "")}&max=10'
+            #         keywords_response = requests.get(datamuse_url)
+            #         keywords_response.raise_for_status()
+            #         keywords_data = keywords_response.json()
+            #         suggested_keywords = [item.get('word') for item in keywords_data if 'word' in item]
+                
+            #     if not suggested_keywords:
+            #         suggested_keywords = ['No keywords found']
+                    
+            # except requests.exceptions.RequestException as e:
+            #     suggested_keywords = [f'Error retrieving suggested keywords: {e}'] 
+
+            # Improved keyword extraction
             try:
-                keywords_response = requests.get(f'https://api.example.com/suggested_keywords?url={url}&apikey=YOUR_API_KEY')
-                keywords_response.raise_for_status()
-                keywords_data = keywords_response.json()
-                suggested_keywords = keywords_data.get('keywords', ['example', 'keyword1', 'keyword2'])
-            except requests.exceptions.RequestException as e:
-                suggested_keywords = [f'Error retrieving suggested keywords: {e}']
+                # Extract keywords from the page content directly
+                # Get all text from important elements
+                text_elements = []
+                
+                # Get title
+                if soup.title:
+                    text_elements.append(soup.title.string)
+                
+                # Get meta description and keywords
+                for meta in soup.find_all('meta'):
+                    if 'name' in meta.attrs and meta.attrs['name'].lower() in ['description', 'keywords']:
+                        if 'content' in meta.attrs:
+                            text_elements.append(meta.attrs['content'])
+                
+                # Get heading content
+                for heading in soup.find_all(['h1', 'h2', 'h3']):
+                    text_elements.append(heading.get_text())
+                
+                # Combine all text
+                all_text = ' '.join(text_elements).lower()
+                
+                # Remove common words and non-alphanumeric characters
+                import re
+                import string
+                
+                # Remove punctuation and convert to lowercase
+                all_text = re.sub(f'[{string.punctuation}]', ' ', all_text)
+                
+                # Define stopwords (common words to exclude)
+                stopwords = ['a', 'an', 'the', 'and', 'or', 'but', 'if', 'then', 'else', 'when', 
+                            'at', 'from', 'by', 'for', 'with', 'about', 'against', 'between',
+                            'into', 'through', 'during', 'before', 'after', 'above', 'below',
+                            'to', 'of', 'in', 'on', 'has', 'have', 'had', 'is', 'are', 'was',
+                            'were', 'be', 'been', 'being', 'do', 'does', 'did', 'will', 'would',
+                            'shall', 'should', 'can', 'could', 'may', 'might', 'must', 'that',
+                            'this', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they',
+                            'who', 'whom', 'whose', 'which', 'what', 'where', 'when', 'why', 'how']
+                
+                # Split into words, filter stopwords and short words
+                words = [word for word in all_text.split() if word not in stopwords and len(word) > 3]
+                
+                # Count word frequencies
+                word_freq = {}
+                for word in words:
+                    word_freq[word] = word_freq.get(word, 0) + 1
+                
+                # Get most common words
+                sorted_words = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
+                
+                # Extract top 10 keywords
+                suggested_keywords = [word for word, count in sorted_words[:10]]
+                
+                # Add bigrams (two-word phrases) for better keyword phrases
+                bigram_freq = {}
+                for i in range(len(words) - 1):
+                    bigram = f"{words[i]} {words[i+1]}"
+                    bigram_freq[bigram] = bigram_freq.get(bigram, 0) + 1
+                
+                sorted_bigrams = sorted(bigram_freq.items(), key=lambda x: x[1], reverse=True)
+                bigram_keywords = [bigram for bigram, count in sorted_bigrams[:5]]
+                
+                # Combine individual words and bigrams
+                suggested_keywords = suggested_keywords[:5] + bigram_keywords
+                
+                if not suggested_keywords:
+                    # If still no keywords, extract from all page content as last resort
+                    all_page_text = soup.get_text().lower()
+                    all_page_text = re.sub(f'[{string.punctuation}]', ' ', all_page_text)
+                    page_words = [word for word in all_page_text.split() if word not in stopwords and len(word) > 3]
+                    
+                    # Count frequencies from all text
+                    page_word_freq = {}
+                    for word in page_words:
+                        page_word_freq[word] = page_word_freq.get(word, 0) + 1
+                    
+                    sorted_page_words = sorted(page_word_freq.items(), key=lambda x: x[1], reverse=True)
+                    suggested_keywords = [word for word, count in sorted_page_words[:10]]
+                    
+                if not suggested_keywords:
+                    suggested_keywords = ['No relevant keywords found']
+                    
+            except Exception as e:
+                suggested_keywords = [f'Error extracting keywords: {str(e)}']
 
-            CrawlResult.objects.create(
-                url=url,
-                status_code=response.status_code,
-                content=response.text,
-                title=title,
-                description=description,
-                keywords=keywords,
-                seo_suggestions='\n'.join(seo_suggestions),
-                response_time=response_time,
-                file_size=file_size,
-                word_count=word_count,
-                media_files=media_files,
-                internal_links=internal_links,
-                external_links=external_links,
-                backlinks=backlinks,
-                page_speed_insights=page_speed_insights,
-                suggested_keywords=suggested_keywords
-            )
+            try:
+                # Attempt to save the data to the database
+                CrawlResult.objects.create(
+                    url=url,
+                    status_code=response.status_code,
+                    content=response.text,
+                    title=title,
+                    description=description,
+                    keywords=keywords,
+                    seo_suggestions='\n'.join(seo_suggestions),
+                    response_time=response_time,
+                    file_size=file_size,
+                    word_count=word_count,
+                    media_files=media_files,
+                    internal_links=internal_links,
+                    external_links=external_links,
+                    backlinks=backlinks,
+                    page_speed_insights=page_speed_insights,
+                    suggested_keywords=suggested_keywords
+                )
+            except OperationalError as e:
+                # Handle the max_allowed_packet error
+                return JsonResponse({'error': 'The data is too large to save. Please try a smaller website or increase the database packet size.'}, status=500)
 
-            return render(request, 'add_project.html', {
+            results_html = render_to_string('add_project_results.html', {
                 'url': url,
                 'status_code': response.status_code,
                 'content': response.text,
@@ -217,8 +328,9 @@ def add_project(request):
                 'page_speed_insights': page_speed_insights,
                 'suggested_keywords': suggested_keywords
             })
+            return JsonResponse({'results_html': results_html})
         else:
-            messages.error(request, 'Failed to retrieve the website. Please check the URL and try again.')
+            return JsonResponse({'error': 'Failed to retrieve the website. Please check the URL and try again.'}, status=400)
     return render(request, 'add_project.html')
 
 def plans_view(request):
@@ -245,3 +357,10 @@ def change_plan(request, plan):
     user.save()
     messages.success(request, f'Your plan has been changed to {plan}.')
     return redirect('plans')
+
+@login_required
+def get_progress(request):
+    """Endpoint to fetch the current progress."""
+    cache_key = f"progress_{request.user.id}"
+    progress = cache.get(cache_key, 0)  # Default to 0% if no progress is set
+    return JsonResponse({'progress': progress})
